@@ -7,8 +7,8 @@
     body {
       margin: 0;
       overflow: hidden;
-      background: radial-gradient(circle at center, #0b1d51 0%, #000011 80%);
-      /* deep night blue to near black */
+      /* Remove background gradient from body since we're drawing it on canvas */
+      background: black;
     }
 
     canvas {
@@ -32,7 +32,10 @@
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     }
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      initStars(); // Re-init stars on resize for full coverage
+    });
     resizeCanvas();
 
     // Create starfield for the background
@@ -55,7 +58,21 @@
     initStars();
 
     function drawStars() {
-      ctx.clearRect(0, 0, width, height);
+      // Draw radial night sky background on canvas
+      const gradient = ctx.createRadialGradient(
+        width / 2,
+        height / 2,
+        100,
+        width / 2,
+        height / 2,
+        Math.max(width, height)
+      );
+      gradient.addColorStop(0, '#0b1d51'); // deep blue center
+      gradient.addColorStop(1, '#000011'); // almost black edges
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw twinkling stars
       for (const star of stars) {
         star.alpha += star.delta;
         if (star.alpha > 1) {
@@ -75,7 +92,7 @@
       }
     }
 
-    // Settings for your original code
+    // Settings for your original line animation
     const LINE_LENGTH = 50;
     const MAX_DEPTH = 6;
     const SPEED = 4; // pixels per frame
@@ -127,15 +144,14 @@
       queue = [];
       currentLine = null;
       addBranches(origin, 0);
-      // Draw stars background only once before lines start
-      drawStars();
+      // drawStars() will be called in animate loop
       drawDot(origin.x, origin.y);
     }
 
     function addBranches(point, depth) {
       if (depth >= MAX_DEPTH) return;
 
-      const numBranches = Math.floor(Math.random() * 2) + 2; // 2 or 3
+      const numBranches = Math.floor(Math.random() * 2) + 2; // 2 or 3 branches
       const shuffled = directions.sort(() => Math.random() - 0.5);
 
       for (let i = 0; i < numBranches; i++) {
@@ -151,7 +167,23 @@
     }
 
     function animate() {
-      drawStars();
+      drawStars(); // Draw background and stars
+
+      // Draw all fully completed lines and dots — 
+      // we need to keep track of them so they don't disappear:
+      // We'll store them in an array that we draw every frame.
+      // Let's add that now:
+
+      // We'll need a global array to store completed lines and dots
+      if (!window.completedLines) {
+        window.completedLines = [];
+      }
+
+      // Draw all completed lines and dots first:
+      for (const line of window.completedLines) {
+        drawPartialLine(line.from, line.to, 1);
+        drawDot(line.to.x, line.to.y, 3);
+      }
 
       if (!currentLine && queue.length > 0) {
         currentLine = queue.shift();
@@ -163,6 +195,10 @@
           currentLine.progress = 1;
           drawPartialLine(currentLine.from, currentLine.to, 1);
           drawDot(currentLine.to.x, currentLine.to.y, 3);
+
+          // Store this completed line so it persists
+          window.completedLines.push(currentLine);
+
           addBranches(currentLine.to, currentLine.depth + 1);
           currentLine = null;
         } else {
@@ -171,8 +207,11 @@
       }
 
       if (!currentLine && queue.length === 0) {
-        // Done, restart after short pause
-        setTimeout(reset, 1000);
+        // Reset everything after short pause
+        setTimeout(() => {
+          window.completedLines = [];
+          reset();
+        }, 1000);
       }
 
       requestAnimationFrame(animate);
@@ -180,7 +219,6 @@
 
     reset();
     animate();
-
   </script>
 </body>
 </html>
