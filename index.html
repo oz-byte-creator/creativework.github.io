@@ -190,6 +190,11 @@
 
   reset();
   animate();
+
+  // Automatically reset the animation every 30 seconds
+  setInterval(() => {
+    reset();
+  }, 30000);
 </script>
 </body>
 </html>
