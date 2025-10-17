@@ -1,64 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Smooth Heavenly Lines - Starry Night Theme</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: black;
-      height: 100%;
-      width: 100%;
-    }
-    canvas {
-      display: block;
-      position: fixed;
-      top: 0; left: 0;
-    }
-    iframe {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      z-index: -1;
-    }
-    #start-container {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 9999;
-      background: rgba(0,0,0,0.7);
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-    }
-    #start-container button {
-      padding: 12px 24px;
-      font-size: 18px;
-      cursor: pointer;
-      background: white;
-      border: none;
-      border-radius: 6px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Smooth Heavenly Lines - Starry Night Theme</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: black; /* fallback */
+    height: 100%;
+    width: 100%;
+  }
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+  }
+</style>
 </head>
 <body>
-
-<!-- Start Button -->
-<div id="start-container">
-  <button onclick="startAudio()">Start Calming Sound 🌙</button>
-</div>
-
 <canvas id="canvas"></canvas>
-
-<!-- Calming White Noise Audio -->
-<iframe id="background-audio" 
-        src="https://www.youtube.com/embed/coTD9NpPR2E?autoplay=1&mute=1&loop=1&playlist=coTD9NpPR2E" 
-        allow="autoplay; fullscreen" 
-        allowfullscreen></iframe>
 
 <script>
   const canvas = document.getElementById('canvas');
@@ -91,9 +53,10 @@
   initStars();
 
   function drawBackground() {
+    // dark radial gradient background
     const grad = ctx.createRadialGradient(width/2, height/2, 100, width/2, height/2, Math.max(width, height));
-    grad.addColorStop(0, '#0b1d51');
-    grad.addColorStop(1, '#000011');
+    grad.addColorStop(0, '#0b1d51'); // deep blue center
+    grad.addColorStop(1, '#000011'); // near black edges
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
   }
@@ -118,6 +81,7 @@
     }
   }
 
+  // Lines settings
   const LINE_LENGTH = 50;
   const MAX_DEPTH = 6;
   const SPEED = 4;
@@ -174,7 +138,7 @@
 
   function addBranches(point, depth) {
     if (depth >= MAX_DEPTH) return;
-    const numBranches = Math.floor(Math.random() * 2) + 2;
+    const numBranches = Math.floor(Math.random() * 2) + 2; // 2 or 3 branches
     const shuffled = directions.sort(() => Math.random() - 0.5);
 
     for (let i = 0; i < numBranches; i++) {
@@ -185,9 +149,11 @@
   }
 
   function animate() {
+    // Draw background and stars first (clears canvas)
     drawBackground();
     drawStars();
 
+    // Draw completed lines and dots so they stay visible
     for (const line of completedLines) {
       drawPartialLine(line.from, line.to, 1);
       drawDot(line.to.x, line.to.y, 3);
@@ -201,6 +167,34 @@
       currentLine.progress += SPEED / LINE_LENGTH;
       if (currentLine.progress >= 1) {
         currentLine.progress = 1;
-        drawPartialLine
-::contentReference[oaicite:0]{index=0}
- 
+        drawPartialLine(currentLine.from, currentLine.to, 1);
+        drawDot(currentLine.to.x, currentLine.to.y, 3);
+
+        completedLines.push(currentLine);
+
+        addBranches(currentLine.to, currentLine.depth + 1);
+        currentLine = null;
+      } else {
+        drawPartialLine(currentLine.from, currentLine.to, currentLine.progress);
+      }
+    }
+
+    if (!currentLine && queue.length === 0) {
+      setTimeout(() => {
+        reset();
+      }, 1000);
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  reset();
+  animate();
+
+  // Automatically reset the animation every 30 seconds
+  setInterval(() => {
+    reset();
+  }, 30000);
+</script>
+</body>
+</html>
