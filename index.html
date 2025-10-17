@@ -8,7 +8,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: black; /* fallback */
+    background: black;
     height: 100%;
     width: 100%;
   }
@@ -17,10 +17,44 @@
     position: fixed;
     top: 0; left: 0;
   }
+  audio {
+    display: none; /* hide the player */
+  }
+  /* Style for the start button container */
+  #start-container {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: rgba(0,0,0,0.7);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  #start-container button {
+    padding: 12px 24px;
+    font-size: 18px;
+    cursor: pointer;
+    background: white;
+    border: none;
+    border-radius: 6px;
+  }
 </style>
 </head>
 <body>
+
+<!-- Start Button -->
+<div id="start-container">
+  <button onclick="startAudio()">Start Calming Sound 🌙</button>
+</div>
+
 <canvas id="canvas"></canvas>
+
+<!-- Calming White Noise Audio -->
+<audio id="background-audio" loop>
+  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_cdb1c20316.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
 
 <script>
   const canvas = document.getElementById('canvas');
@@ -53,10 +87,9 @@
   initStars();
 
   function drawBackground() {
-    // dark radial gradient background
     const grad = ctx.createRadialGradient(width/2, height/2, 100, width/2, height/2, Math.max(width, height));
-    grad.addColorStop(0, '#0b1d51'); // deep blue center
-    grad.addColorStop(1, '#000011'); // near black edges
+    grad.addColorStop(0, '#0b1d51');
+    grad.addColorStop(1, '#000011');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
   }
@@ -81,7 +114,6 @@
     }
   }
 
-  // Lines settings
   const LINE_LENGTH = 50;
   const MAX_DEPTH = 6;
   const SPEED = 4;
@@ -138,7 +170,7 @@
 
   function addBranches(point, depth) {
     if (depth >= MAX_DEPTH) return;
-    const numBranches = Math.floor(Math.random() * 2) + 2; // 2 or 3 branches
+    const numBranches = Math.floor(Math.random() * 2) + 2;
     const shuffled = directions.sort(() => Math.random() - 0.5);
 
     for (let i = 0; i < numBranches; i++) {
@@ -149,11 +181,9 @@
   }
 
   function animate() {
-    // Draw background and stars first (clears canvas)
     drawBackground();
     drawStars();
 
-    // Draw completed lines and dots so they stay visible
     for (const line of completedLines) {
       drawPartialLine(line.from, line.to, 1);
       drawDot(line.to.x, line.to.y, 3);
@@ -191,10 +221,18 @@
   reset();
   animate();
 
-  // Automatically reset the animation every 30 seconds
+  // Automatically reset animation every 30 seconds
   setInterval(() => {
     reset();
   }, 30000);
+
+  // Function to start audio after user interaction
+  function startAudio() {
+    const audio = document.getElementById('background-audio');
+    audio.play();
+    document.getElementById('start-container').style.display = 'none';
+  }
 </script>
+
 </body>
 </html>
